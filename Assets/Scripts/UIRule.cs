@@ -98,7 +98,7 @@ public class UIRule : MonoBehaviour
                 Vector2 mouseOver;
                 mouseOver.x = (int)hit.point.x;
                 mouseOver.y = (int)hit.point.z;
-                Vector2 boardCoordinates = Scenario.EcceInstance.ToArrayCoordinates(mouseOver);
+                Vector2 boardCoordinates = Scenario.ToArrayCoordinates(mouseOver);
                 if ((boardCoordinates.y == 4 && boardCoordinates.x == 1) || (boardCoordinates.y == 4 && boardCoordinates.x == 6))
                 {
                     showPanelGuidelinesEcce = true;

@@ -43,7 +43,7 @@ public class Global : MonoBehaviour
   int scoreBlackInt = 0;
   public static int WinnerInt { get; set; } = -1;
 
-    protected readonly static int caseLength = 2;
+    public readonly static int caseLength = 2;
 
   /**** View ****/
   protected Piece selectedPiece;
@@ -108,13 +108,11 @@ public class Global : MonoBehaviour
             } else
             // Selecting a piece
             {
-                            Debug.Log("in the selection");
                 TrySelectPiece(mouseOver, player);
             }
           }
           else
           {
-                        Debug.Log(selectedPiece);
                 TryMovePiece(mouseOver, startDrag);
             }
         }
@@ -122,7 +120,7 @@ public class Global : MonoBehaviour
     }
   }
 
-  protected Piece GetPiece(Vector2 position)
+  public Piece GetPiece(Vector2 position)
   {
     // Getting the piece out of the array
     Vector2 coordinates = ToArrayCoordinates(position);
@@ -144,7 +142,7 @@ public class Global : MonoBehaviour
     Piece piece = GetPiece(mouseOver);
     if (piece != null && IsPlayerPickingRightColorPiece(piece, player))
     {
-            Debug.Log(piece);
+            Debug.Log("in select piece");
       selectedPiece = piece;
       startDrag = mouseOver;
       // Showing selection
@@ -162,7 +160,7 @@ public class Global : MonoBehaviour
     }
   }
 
-  public Vector2 ToArrayCoordinates(Vector2 c)
+  public static Vector2 ToArrayCoordinates(Vector2 c)
   {
     return new Vector2(
       Mathf.FloorToInt(c.x / caseLength),
@@ -180,16 +178,18 @@ public class Global : MonoBehaviour
 
   public virtual void TryMovePiece(Vector2 mouseOver, Vector2 startDrag)
   {
+        mouseOver = this.mouseOver;
+        startDrag = this.startDrag; 
         Piece advPiece = GetPiece(mouseOver);
-        if (this.selectedPiece != null && advPiece != null && !advPiece.name.Contains(this.selectedPiece.name.Substring(0, 5)))
+        if (this.selectedPiece != null && advPiece != null)// && !advPiece.name.Contains(this.selectedPiece.name.Substring(0, 5)))
         {
             // Eating piece
-            if (GameLogic.IsMovePossible(true, selectedPiece.isEcce,
-              ToBoardCoordinates(startDrag), ToBoardCoordinates(mouseOver)))
+            if (/*GameLogic.IsMovePossible(true, selectedPiece.isEcce,
+              ToBoardCoordinates(startDrag), ToBoardCoordinates(mouseOver))*/ true)
             {
                 //RemovingPiece(ToArrayCoordinates(mouseOver), true);
                 //Move(advPiece, mouseOver, startDrag);
-                this.selectedPiece.Effect();
+                this.selectedPiece.Effect(mouseOver);
             }
         }
         else
@@ -199,7 +199,10 @@ public class Global : MonoBehaviour
             if (GetPiece(mouseOver) == null && GameLogic.IsMovePossible(selectedPiece.isEcce, true,
               ToBoardCoordinates(startDrag), ToBoardCoordinates(mouseOver)))
             {
-               Move(this.selectedPiece, mouseOver, startDrag);
+               Move(mouseOver, startDrag);
+                DeselectPiece(mouseOver);
+                FinishTurn();
+                DetermineWinner();
             }
             // Selecting another piece
             else
@@ -213,11 +216,17 @@ public class Global : MonoBehaviour
     public void Move(Vector2 mouseOver, Vector2 startDrag)
     {
         // Moving piece
-        Piece p = GetPiece(mouseOver);
+        Piece p = GetPiece(startDrag);
+        Debug.Log(p);
+        // new Piece in game
+        if(p == null)
+        {
+            p = this.selectedPiece;
+        }
         p.transform.position =
           (Vector3.right * ToBoardCoordinates(mouseOver).x) +
           (Vector3.forward * ToBoardCoordinates(mouseOver).y) +
-          (Vector3.up * 3);
+          (Vector3.up * 1);
 
         // Deleting piece in array
         pieces[
@@ -231,11 +240,9 @@ public class Global : MonoBehaviour
           ] = p;
         // In case of a first piece move
         //TryPlaceNewPiece(player, ToArrayCoordinates(startDrag));
-        CheckPieceEvolution(mouseOver, player);
-        CheckOneUp(p, ToArrayCoordinates(mouseOver), player);
-        FinishTurn();
-        DeselectPiece(mouseOver);
-        DetermineWinner();
+        //CheckPieceEvolution(mouseOver, player);
+        //CheckOneUp(p, ToArrayCoordinates(mouseOver), player);
+
     }
 
 
@@ -326,29 +333,32 @@ public class Global : MonoBehaviour
 
   public void TryPlaceNewPiece(int player)
   {
-        Debug.Log(player);
+        mouseOver = new Vector2(1 * caseLength, 1 * caseLength);
         if (player == 0 && pieces[1, 1] == null)
     {
-            Debug.Log(pieces[1,1]);
+        selectedPiece = GetANewPiece(player);
+        countWhitePiecesOnBoard++;
+            mouseOver = new Vector2(1 * caseLength, 1 * caseLength);
 
-            selectedPiece = GetANewPiece(player); 
+            Move(
+        mouseOver,
+        mouseOver);
             Debug.Log(selectedPiece);
 
-            countWhitePiecesOnBoard++;
-      Move(
-        this.selectedPiece,
-        new Vector2(1 * caseLength, 1 * caseLength),
-        new Vector2(1 * caseLength, 1 * caseLength));
-    }
+            DeselectPiece(new Vector2(1 * caseLength, 1 * caseLength));
+            FinishTurn();
+            DetermineWinner();
+        }
     if (player == 1 && pieces[6, 1] == null)
     {
       selectedPiece = GetANewPiece(player);
       countBlackPiecesOnBoard++;
-      Move(
-        this.selectedPiece,
-        new Vector2(6 * caseLength, 1 * caseLength),
-        new Vector2(6 * caseLength, 1 * caseLength));
-    }
+    mouseOver = new Vector2(6 * caseLength, 1 * caseLength);
+            Move(mouseOver, mouseOver);
+            DeselectPiece(new Vector2(6 * caseLength, 1 * caseLength));
+            FinishTurn();
+            DetermineWinner();
+        }
     
   }
 
@@ -367,23 +377,10 @@ public class Global : MonoBehaviour
         i++;
       }
     }
-    Piece piece = newPiecesNotOnBoard[player, i];
-        GameObject prefab;
-        if(player == 0)
-        {
-            prefab = this.whiteChessPrefab;
-
-        } else
-        {
-            prefab = this.blackChessPrefab;
-        }
-        GameObject go = Instantiate(prefab) as GameObject;
-        BringEnnemy piece2 = go.AddComponent<BringEnnemy>();
-        piece2.SetPiece(piece2);
-        piece2.Effect();
-
+        Piece piece = newPiecesNotOnBoard[player, i];
+        piece = piece.gameObject.AddComponent<Warrior>();
         newPiecesNotOnBoard[player, i] = null;
-    return piece2;
+        return piece;
   }
 
   private Piece GetANewEccePiece(int player)
@@ -493,7 +490,7 @@ public class Global : MonoBehaviour
   }
 
 
-  protected void DetermineWinner()
+  public void DetermineWinner()
   {
     if (scoreWhiteInt >= NumberOfNewPieces(1) + countBlackPiecesOnBoard + scoreBlackInt) {
       Global.WinnerInt = 0;

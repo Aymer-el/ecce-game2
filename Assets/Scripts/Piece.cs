@@ -16,7 +16,8 @@ public enum PieceType
     standard
 }
 
-public class Piece : MonoBehaviour {
+public class Piece : MonoBehaviour
+{
 
     /**** Dependency ****/
     public NPalBoard Board { get; private set; }
@@ -30,10 +31,7 @@ public class Piece : MonoBehaviour {
     // Space between spaces
     protected int pieceMargin = 2;
 
-    public void Effect(Piece piece, Vector2 location)
-    {
-    }
-   
+    public virtual void Effect(Vector2 target) { }
 }
 
 public class Warriorpiece : Piece
@@ -41,62 +39,75 @@ public class Warriorpiece : Piece
 
 }
 
-public abstract class DecoratorPiece : Piece
+
+public class DecoratorPiece : Piece
 {
     protected Piece piece;
     public string sprite;
 
-    public DecoratorPiece SetPiece(Piece piece)
+    public virtual DecoratorPiece SetPiece(Piece piece)
     {
         this.piece = piece;
         return this;
     }
-}
 
-public class BringEnnemy : DecoratorPiece
+    public new void Effect(Vector2 target)
+    {
+
+    }
+}
+    public class BringEnnemy : DecoratorPiece
 {
     public string Name = "BringEnnemypiece";
     public string Description = "Bring the ennemy on one case";
     public new int stamina = 7;
 
-    public void Effect(Vector2 location)
+    public new void Effect(Vector2 target)
     {
-        this.piece.Effect(piece, location);
-        piece.stamina = piece.stamina - 2;
-        if(Global.EcceInstance.startDrag.x == Global.EcceInstance.startDrag.x)
+        Debug.Log("in effect2");
+        this.piece.Effect(target);
+        Piece advPiece = Global.EcceInstance.GetPiece(target);
+        if (Global.EcceInstance.mouseOver.x == Global.EcceInstance.startDrag.x)
         {
-           (Global.EcceInstance.mouseOver.x + 2, Global.EcceInstance.mouseOver.x) 
+            if (Global.EcceInstance.mouseOver.y + 2 == Global.EcceInstance.startDrag.y)
+            {
+                Global.EcceInstance.Move(
+                    new Vector2(Global.EcceInstance.startDrag.x, Global.EcceInstance.startDrag.y + 1),
+                    target
+               );
+            }
+            else if (Global.EcceInstance.mouseOver.y - 2 == Global.EcceInstance.startDrag.y)
+            {
+                Global.EcceInstance.Move(
+                    new Vector2(Global.EcceInstance.startDrag.x, Global.EcceInstance.startDrag.y - 1),
+                    target
+                );
+            }
         }
-            if ((Global.EcceInstance.startDrag.x -2) == Global.EcceInstance.startDrag.y)
+        else if (Global.EcceInstance.mouseOver.y == Global.EcceInstance.startDrag.y)
         {
-            new Vector2(Global.EcceInstance.startDrag.x + 1, Global.EcceInstance.startDrag.y);
-            new Vector2(Global.EcceInstance.startDrag.x, Global.EcceInstance.startDrag.y +1);
-            new Vector2(Global.EcceInstance.startDrag.x + 1, Global.EcceInstance.startDrag.x + 1)
-
-        }
-        {
-            Global.EcceInstance.TryMovePiece(new Vector2(Global.EcceInstance.mouseOver.x - 2, Global.EcceInstance.startDrag.y),
-                new Vector2(Global.EcceInstance.startDrag.x, Global.EcceInstance.startDrag.y));
-        }
-        else
-        {
+            if (Global.EcceInstance.mouseOver.x + 2 == Global.EcceInstance.startDrag.x)
+            {
+                Global.EcceInstance.Move(
+                    new Vector2(Global.EcceInstance.startDrag.x + 1, Global.EcceInstance.startDrag.y),
+                    target
+                );
+            }
+            else if (Global.EcceInstance.mouseOver.y - 2 == Global.EcceInstance.startDrag.y)
+            {
+                Global.EcceInstance.Move(
+                    new Vector2(Global.EcceInstance.startDrag.x - 1, Global.EcceInstance.startDrag.y),
+                    target
+                );
+            }
 
         }
     }
 
-    public DecoratorPiece SetPiece(Piece piece)
+    public new DecoratorPiece SetPiece(Piece piece)
     {
         this.piece = piece;
         return this;
-    }
-}
-
-public class AttackEnnemy : DecoratorPiece
-{
-    public new void Effect()
-    {
-        this.piece.Effect();
-        Debug.Log("3");
     }
 }
 
