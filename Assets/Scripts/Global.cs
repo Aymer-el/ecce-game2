@@ -46,7 +46,7 @@ public class Global : MonoBehaviour
     public readonly static int caseLength = 2;
 
   /**** View ****/
-  protected Piece selectedPiece;
+  public Piece selectedPiece;
 
     public virtual void Start()
     {
@@ -87,8 +87,11 @@ public class Global : MonoBehaviour
             if (physicsEcceBoard || physicsWhiteBanch || physicsBlackBanch)
       {
         // Saving mouseOver
-        mouseOver.x = (int)hit.point.x;
-        mouseOver.y = (int)hit.point.z;
+        if (physicsEcceBoard)
+        {
+            mouseOver.x = (int)hit.point.x;
+            mouseOver.y = (int)hit.point.z;
+        }
         if (Input.GetMouseButtonDown(0))
         {
           if (selectedPiece == null)
@@ -113,7 +116,13 @@ public class Global : MonoBehaviour
           }
           else
           {
-                TryMovePiece(mouseOver, startDrag);
+                if(UIPieceAction.instance.abilityOn)
+                {
+                    selectedPiece.Effect(Global.EcceInstance.startDrag);
+                } else
+                {
+                    TryMovePiece(mouseOver, startDrag);
+                }
             }
         }
       }
@@ -189,7 +198,7 @@ public class Global : MonoBehaviour
             {
                 //RemovingPiece(ToArrayCoordinates(mouseOver), true);
                 //Move(advPiece, mouseOver, startDrag);
-                this.selectedPiece.Effect(mouseOver);
+                // this.selectedPiece.Effect(mouseOver);
             }
         }
         else
@@ -199,7 +208,7 @@ public class Global : MonoBehaviour
             if (GetPiece(mouseOver) == null && GameLogic.IsMovePossible(selectedPiece.isEcce, true,
               ToBoardCoordinates(startDrag), ToBoardCoordinates(mouseOver)))
             {
-               Move(mouseOver, startDrag);
+                Move(mouseOver, startDrag);
                 DeselectPiece(mouseOver);
                 FinishTurn();
                 DetermineWinner();
@@ -318,6 +327,7 @@ public class Global : MonoBehaviour
     }
     startDrag = mouseOver;
     mouseOver = new Vector2();
+    UIPieceAction.instance.abilityOn = false;
   }
 
   public void DeselectPiece(Vector2 startDrag)
@@ -338,9 +348,9 @@ public class Global : MonoBehaviour
     {
         selectedPiece = GetANewPiece(player);
         countWhitePiecesOnBoard++;
-            mouseOver = new Vector2(1 * caseLength, 1 * caseLength);
+        mouseOver = new Vector2(1 * caseLength, 1 * caseLength);
 
-            Move(
+        Move(
         mouseOver,
         mouseOver);
             Debug.Log(selectedPiece);
